@@ -1,5 +1,7 @@
-#I WORKED WITH HANNAH AND MARISSA ON THIS ASSIGNMENT. WE ALL MET UP AND WORKED THROUGH THE PROBLEMS 
+#PROBLEMS 1 - 3 I WORKED WITH HANNAH AND MARISSA ON. WE ALL MET UP AND WORKED THROUGH THE PROBLEMS 
 
+
+ 
 import pandas as pd
 import seaborn as sns
 import numpy as np 
@@ -52,7 +54,7 @@ def runKNN(dataset, prediction, ignore, neighbors):
     
     return knn
 
-#question 2 - with the accuracy score and F1 being .45 it means that the algorithm is not very accurate when predicting the players positions. 
+#question 3 - with the accuracy score and F1 being .45 it means that the algorithm is not very accurate when predicting the players positions. 
 
 
 
@@ -69,6 +71,8 @@ def classifyPlayer(targetRow, data, model, prediction, ignore):
         print(data.iloc[neighbor])
 
 
+#**********PLEASE READ!!!********
+# QUESTIONS 1 - 3 AND QUESTION 6 ARE MARISSA HANNAH AND I'S CODE THAT WE FIGURED OUT ON OUR OWN BY WORKING TOGETHER. QUESTIONS 4, 5, AND 7 ARE JACOBS CODE - HE MET WITH HANNAH MARISSA AND I TO GO THROUGH AND EXPLAIN WHAT HE DID AND WHY. WE THEN WENT THROUGH AND COMMENTED THROUGH TO SHOW THAT WE UNDERSTAND WHAT HE DID. WE JUST WANTED TO LET YOU KNOW THAT THE NEXT FOUR QUESTIONS ARE JACOBS CODE BUT OUR COMMENTS. WE DIDNT WANT YOU TO THINK WE WERE CHEATING, BUT WE ALSO WANTED TO SHOW YOU THAT WE TOOK THE STEPS TO LEARN TO HOW TO DO IT. WE THOUGHT IT WOULD BE MORE BENEFICIAL TO SHOW THAT WE HAD SOMEONE EXPLAIN TO US HOW TO DO IT RATHER THAN  NOT PUT ANYTHING AT ALL BUT IT IS UP TO YOU IF YOU WANT TO GRADE THIS OR NOT - WE JUST WANTED TO SHOW OUR EFFORTS. 
 
 
 def runkNNCrossfold(dataset, prediction, ignore, neighbors):
@@ -87,20 +91,80 @@ def runkNNCrossfold(dataset, prediction, ignore, neighbors):
 
         pred = knn.predict(X[test[0]:test[-1]]) # makes a test prediction 
         accuracy = accuracy_score(pred, Y[test[0]:test[-1]])
-        accuracies.append(accuracy)
-        print("Fold " + str(fold) + ":" + str(accuracy))
+        accuracies.append(accuracy) #appends the accuracy into the list made above 
+        print("Fold " + str(fold) + ":" + str(accuracy)) # prints a statement of the put 
 
     return np.mean(accuracies)
 
 
+# Problem 5:
+def determineK(dataset, prediction, ignore, k_vals):
+    best_k = 0 # this will create an integer value 
+    best_accuracy = 0 # creates an integer value 
+    # the values will be replaced in the for loop
 
+    for k in k_vals: # for loop to loop through each k (5, 7, 10) in the input
+        current_k = runkNNCrossfold(dataset, prediction, ignore, k) # runs the kNN cross validation function that we created in problem 4 for each k value in k_vals
+        if current_k > best_accuracy: # asks if the current k value is better than the best accuracy that is stored
+            best_k = k # if that k is better than the stored best accuracy then set the variable k to the k value being looped through
+            best_accuracy = current_k # stores the current k value as best accuracy
+
+    print("Best k, accuracy = " + str(best_k) + ", " + str(best_accuracy)) # prints the best k and current k value accuracy as the output in the terminal
+
+# Problem 6 - worked on with Taylor and Marissa (without Jacob's help)
+def runKMeans(dataset, ignore, neighbors):
+    # set up dataset
+    X = dataset.drop(columns = ignore)
+    
+    # run k-means algorithm
+    kmeans = KMeans(n_clusters = neighbors)
+    
+    # train the model
+    kmeans.fit(X)
+    
+    # add the predictions to the dataframe
+    dataset['cluster'] = pd.Series(kmeans.predict(X), index = dataset.index)
+    
+    return kmeans
+
+# Problem 7:
+#Adapted from: https://datascience.stackexchange.com/a/41125
+def findClusterK(dataset, ignore):
+    
+    mean_distances = {} # creates an empty dictionary
+    X = dataset.drop(columns=ignore) # sets up the dataset
+    
+    for n in np.arange(4,12):
+        model = runKMeans(dataset, ignore, n) #run the model from problem 6
+        mean_distances[n] = np.mean([np.min(x) for x in model.transform(X)]) # use .transform() to get the distances of the points from all clusters. Then use list comprehension to get the min of those distances for each point to get the distance from the cluster the point belongs to. Take the mean of that list to get average distance.
+
+    print("Best k by average distance: " + str(min(mean_distances, key=mean_distances.get))) #  this prints the best k based on the average distance to the other points, then use .get to return the value in the mean_distances key
+    
+
+    
 nbaData = loadData("nba_2013_clean.csv")
 
-# WEDNESDAY PROBLEMS
 knnModel = runKNN(nbaData, "pos", "player", 3)
 
+
+for k in [5,7,10]: #this is looping through the different ways that they trained it 
+    print("Folds: " + str(k))
+    runkNNCrossfold(nbaData,"pos", "player", k)
+    
+    
+    
 
 for k in [5,7,10]:
     print("Folds: " + str(k))
     runkNNCrossfold(nbaData,"pos", "player", k)
+    
+determineK(nbaData,"pos", "player", [5,7,10])
+
+kmeansModel = runKMeans(nbaData, ['pos', 'player'], 5)
+
+findClusterK(nbaData, ['pos', 'player'])
+
+
+
+
 
